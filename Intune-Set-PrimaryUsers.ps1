@@ -382,12 +382,12 @@ if ($DeviceGroups.Count -gt 0) {
         write-verbose "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Success to get $($AllDeviceGroupMembers.count) Device Group Members"}
     catch{write-Error "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Failed to get Device Group Members with error: $_"}
     #Get Intune Devices only members of the specified groups
-    try{$IntuneDevices = Get-MgDeviceManagementManagedDevice -filter "operatingSystem eq 'Windows'and LastSyncDateTime gt $($DeviceStartTime.ToString("yyyy-MM-ddTHH:mm:ssZ"))" -all -Property "AzureAdDeviceId,DeviceName,Id" | where-object {$AllDeviceGroupMembers.deviceid.Contains($_.azureaddeviceid)}
+    try{@($IntuneDevices = Get-MgDeviceManagementManagedDevice -filter "operatingSystem eq 'Windows'and LastSyncDateTime gt $($DeviceStartTime.ToString("yyyy-MM-ddTHH:mm:ssZ"))" -all -Property "AzureAdDeviceId,DeviceName,Id" | where-object {$AllDeviceGroupMembers.deviceid.Contains($_.azureaddeviceid)})
     write-verbose "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Success to get $($IntuneDevices.count) Devices with selected properties for devices synced last $($DeviceTimeSpan) days"}
     catch{write-Error "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Failed to get Devices with error: $_"}    
     }
 else{   #Get all Intune Devices
-    try{$IntuneDevices = Get-MgDeviceManagementManagedDevice -filter "operatingSystem eq 'Windows'and LastSyncDateTime gt $($DeviceStartTime.ToString("yyyy-MM-ddTHH:mm:ssZ"))" -all -Property "AzureAdDeviceId,DeviceName,Id"
+    try{@($IntuneDevices = Get-MgDeviceManagementManagedDevice -filter "operatingSystem eq 'Windows'and LastSyncDateTime gt $($DeviceStartTime.ToString("yyyy-MM-ddTHH:mm:ssZ"))" -all -Property "AzureAdDeviceId,DeviceName,Id")
         write-verbose "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Success to get $($IntuneDevices.count) Devices with selected properties for devices synced last $($DeviceTimeSpan) days"}
     catch{write-Error "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Failed to get Devices with error: $_"}
     }
@@ -397,7 +397,7 @@ $MemoryUsage = [System.GC]::GetTotalMemory($true)
 Write-Verbose "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Success to cleanup Memory usage after get devices to: $(($MemoryUsage/1024/1024).ToString('N2')) MB"
 
 #Get Sign-In logs
-try{$SignInLogs = Get-MgAuditLogSignIn -Filter "appDisplayName eq 'Windows Sign In' and status/errorCode eq 0 and IsInteractive eq true and ClientAppUsed eq 'Mobile Apps and Desktop clients' and CreatedDateTime gt $($SignInsStartTime.ToString("yyyy-MM-ddTHH:mm:ssZ"))" -All | Select-Object devicedetail.deviceid,userprincipalname, UserId -ExpandProperty devicedetail
+try{@($SignInLogs = Get-MgAuditLogSignIn -Filter "(appDisplayName eq 'Windows Sign In' or appDisplayName eq 'Microsoft Authentication Broker') and status/errorCode eq 0 and IsInteractive eq true and ClientAppUsed eq 'Mobile Apps and Desktop clients' and CreatedDateTime gt $($SignInsStartTime.ToString("yyyy-MM-ddTHH:mm:ssZ"))" -All | Select-Object devicedetail.deviceid,userprincipalname, UserId -ExpandProperty devicedetail)
     write-verbose "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Success to get $($SignInLogs.count) Sign-In logs with selected properties for last $($SigninsTimeSpan) days"}
 catch{write-Error "$(Get-Date -Format 'yyyy-MM-dd'),$(Get-Date -format 'HH:mm:ss'),Failed to get Sign-In logs with error: $_"}
 
